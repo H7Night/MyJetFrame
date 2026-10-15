@@ -34,11 +34,11 @@ import com.jhon.myjetframe.core.designsystem.icon.MyJetFrameIcons
 @Composable
 fun DeleteIconButton(
     onClick: () -> Unit,
+    contentDescription: String,
     modifier: Modifier = Modifier,
     buttonSize: Dp = 28.dp,
     iconSize: Dp = 16.dp,
     tintAlpha: Float = 0.6f,
-    contentDescription: String? = null,
 ) {
     IconButton(
         onClick = onClick,

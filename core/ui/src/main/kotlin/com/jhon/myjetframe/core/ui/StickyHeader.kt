@@ -29,11 +29,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.jhon.myjetframe.core.designsystem.icon.MyJetFrameIcons
 import com.jhon.myjetframe.core.designsystem.theme.numbers
@@ -42,7 +40,7 @@ import com.jhon.myjetframe.core.designsystem.theme.numbers
 fun StickyHeader(
     name: String,
     sequence: String? = null,
-    setCount: Int = 0,
+    countLabel: String? = null,
     isCollapsed: Boolean = false,
     onCollapseToggle: () -> Unit = {},
     actions: (@Composable RowScope.() -> Unit)? = null,
@@ -78,10 +76,10 @@ fun StickyHeader(
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
-                if (setCount > 0) {
+                if (countLabel != null) {
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = stringResource(R.string.label_sets_count, normalizeInt(setCount)),
+                        text = countLabel,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -99,12 +97,5 @@ fun StickyHeader(
                 actions()
             }
         }
-    }
-}
-
-@Composable
-private fun normalizeInt(value: Int, padding: Char = '0', length: Int = 2): String {
-    return remember(value) {
-        value.toString().padStart(length, padding)
     }
 }

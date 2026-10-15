@@ -1368,7 +1368,8 @@ git -C "MyJetFrame" commit -m "feat(core:ui): port button composables"
 
 **Interfaces:**
 - Consumes: framework tokens/widgets.
-- Produces: `SettingsGroup(...)`, `SettingsRow(...)`, `SwitchSettingsRow(...)`, `PreferenceSwitchRow(...)`, `StickyHeader(...)` (same signatures as Kenko originals).
+- Produces: `SettingsGroup(...)`, `SettingsRow(...)`, `SwitchSettingsRow(...)`, `PreferenceSwitchRow(...)`, and `StickyHeader(name, sequence, countLabel, isCollapsed, onCollapseToggle, actions)`.
+- **Boundary rule:** `:core:ui` is domain-agnostic. It must NOT ship app-specific copy or workout-domain concepts. `StickyHeader` is therefore parameterized: the caller supplies `countLabel: String?` (e.g. "3 sets") instead of the widget rendering Kenko's `label_sets_count` string. No `strings.xml` is added to `:core:ui`.
 
 - [ ] **Step 1: Port the files**
 
@@ -1377,6 +1378,12 @@ Copy from Kenko and rename packages/imports exactly as in Task 8:
 - `ui\component\PreferenceSwitchRow.kt` → `core/ui/.../PreferenceSwitchRow.kt`
 - `ui\component\StickyHeader.kt` → `core/ui/.../StickyHeader.kt`
 Replace `com.looker.kenko.*` → `com.jhon.myjetframe.*`; border tokens → framework names; `KenkoIcons` → `MyJetFrameIcons`; drop Kenko-domain imports.
+
+**StickyHeader de-coupling (do this, don't ship app copy):** in the ported `StickyHeader.kt`,
+- Replace the `setCount: Int` parameter with `countLabel: String? = null`.
+- Replace `text = stringResource(R.string.label_sets_count, normalizeInt(setCount))` with `text = countLabel`, shown only when `countLabel != null`.
+- Remove the `normalizeInt` helper (now unused) and the `androidx.compose.ui.res.stringResource` import.
+- Do NOT create any `res/values/strings.xml` (or `values-zh`) in `:core:ui`.
 
 - [ ] **Step 2: Write the failing test**
 

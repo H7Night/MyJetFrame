@@ -38,9 +38,18 @@ fun brandColorScheme(seed: Color, dark: Boolean): ColorScheme {
             tertiary = tone(0.70f, min(s, 0.25f)),
         )
     } else {
+        val primary = tone(0.42f, min(s, 0.55f))
+        val onPrimary =
+            if (ColorUtils.calculateContrast(Color(0xFF000000).toArgb(), primary.toArgb()) >=
+                ColorUtils.calculateContrast(Color(0xFFFFFFFF).toArgb(), primary.toArgb())
+            ) {
+                Color(0xFF000000)
+            } else {
+                Color(0xFFFFFFFF)
+            }
         LineLightColorScheme.copy(
-            primary = tone(0.42f, min(s, 0.55f)),
-            onPrimary = Color(0xFFFFFFFF),
+            primary = primary,
+            onPrimary = onPrimary,
             primaryContainer = tone(0.92f, min(s, 0.35f)),
             onPrimaryContainer = tone(0.25f, min(s, 0.45f)),
             inversePrimary = tone(0.72f, min(s, 0.45f)),

@@ -29,6 +29,5 @@ fun LazyListScope.endItem(
 ) {
     item {
         Spacer(Modifier.height(height))
-        // TODO: Add some item here to make list end look good behind FAB
     }
 }

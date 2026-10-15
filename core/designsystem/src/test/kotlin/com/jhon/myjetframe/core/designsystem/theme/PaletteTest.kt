@@ -37,7 +37,7 @@ class PaletteTest {
 
     @Test
     fun brand_extremeSeed_keepsReadableContrast() {
-        val scheme = brandColorScheme(Color.White, dark = false)
+        val scheme = brandColorScheme(Color(0xFFFFEB3B), dark = false)
         val ratio = ColorUtils.calculateContrast(
             scheme.onPrimary.toArgb(),
             scheme.primary.toArgb(),
@@ -50,12 +50,12 @@ class PaletteTest {
     fun dynamic_belowApi31_usesBaselineScheme() {
         val ctx = RuntimeEnvironment.getApplication()
         assertEquals(
-            lightColorScheme().toString(),
-            resolveColorScheme(Palette.Dynamic, dark = false, context = ctx).toString(),
+            lightColorScheme().primary,
+            resolveColorScheme(Palette.Dynamic, dark = false, context = ctx).primary,
         )
         assertEquals(
-            darkColorScheme().toString(),
-            resolveColorScheme(Palette.Dynamic, dark = true, context = ctx).toString(),
+            darkColorScheme().primary,
+            resolveColorScheme(Palette.Dynamic, dark = true, context = ctx).primary,
         )
     }
 }

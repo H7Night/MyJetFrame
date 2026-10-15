@@ -31,7 +31,10 @@ fun MyJetFrameTheme(
             ThemeMode.Dark -> true
         }
     }
-    val colorScheme = resolveColorScheme(palette, isDark, LocalContext.current)
+    val context = LocalContext.current
+    val colorScheme = remember(palette, isDark, context) {
+        resolveColorScheme(palette, isDark, context)
+    }
     CompositionLocalProvider(
         LocalMyJetFrameColors provides MyJetFrameColors(isDark, colorScheme),
     ) {

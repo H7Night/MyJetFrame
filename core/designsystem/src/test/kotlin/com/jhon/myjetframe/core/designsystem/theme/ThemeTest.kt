@@ -1,8 +1,9 @@
 package com.jhon.myjetframe.core.designsystem.theme
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.test.junit4.createComposeRule
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -14,13 +15,31 @@ class ThemeTest {
     val compose = createComposeRule()
 
     @Test
-    fun theme_rendersContent_withLinePalette() {
+    fun theme_light_publishesNonDarkLineScheme() {
+        var captured: MyJetFrameColors? = null
         compose.setContent {
             MyJetFrameTheme(themeMode = ThemeMode.Light, palette = Palette.Line) {
-                Text(MaterialTheme.colorScheme.primary.toString())
+                captured = LocalMyJetFrameColors.current
+                Text("x")
             }
         }
         compose.waitForIdle()
-        // No crash and the tree composed successfully.
+        val colors = requireNotNull(captured)
+        assertEquals(false, colors.isDark)
+        assertEquals(LineLightColorScheme.primary, colors.colorScheme.primary)
+    }
+
+    @Test
+    fun theme_dark_publishesDarkScheme() {
+        var captured: MyJetFrameColors? = null
+        compose.setContent {
+            MyJetFrameTheme(themeMode = ThemeMode.Dark, palette = Palette.Line) {
+                captured = LocalMyJetFrameColors.current
+            }
+        }
+        compose.waitForIdle()
+        val colors = requireNotNull(captured)
+        assertTrue(colors.isDark)
+        assertEquals(LineDarkColorScheme.primary, colors.colorScheme.primary)
     }
 }

@@ -1001,11 +1001,10 @@ git -C "MyJetFrame" commit -m "feat(core:designsystem): add shapes and neutral b
 ```kotlin
 package com.jhon.myjetframe.core.designsystem.theme
 
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.material3.Text
+import androidx.compose.ui.test.junit4.createComposeRule
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -1016,14 +1015,32 @@ class ThemeTest {
     @get:Rule val compose = createComposeRule()
 
     @Test
-    fun theme_rendersContent_withLinePalette() {
+    fun theme_light_publishesNonDarkLineScheme() {
+        var captured: MyJetFrameColors? = null
         compose.setContent {
             MyJetFrameTheme(themeMode = ThemeMode.Light, palette = Palette.Line) {
-                Text(MaterialTheme.colorScheme.primary.toString())
+                captured = LocalMyJetFrameColors.current
+                Text("x")
             }
         }
         compose.waitForIdle()
-        // No crash and the tree composed successfully.
+        val colors = requireNotNull(captured)
+        assertEquals(false, colors.isDark)
+        assertEquals(LineLightColorScheme.primary, colors.colorScheme.primary)
+    }
+
+    @Test
+    fun theme_dark_publishesDarkScheme() {
+        var captured: MyJetFrameColors? = null
+        compose.setContent {
+            MyJetFrameTheme(themeMode = ThemeMode.Dark, palette = Palette.Line) {
+                captured = LocalMyJetFrameColors.current
+            }
+        }
+        compose.waitForIdle()
+        val colors = requireNotNull(captured)
+        assertTrue(colors.isDark)
+        assertEquals(LineDarkColorScheme.primary, colors.colorScheme.primary)
     }
 }
 ```
@@ -1069,7 +1086,10 @@ fun MyJetFrameTheme(
             ThemeMode.Dark -> true
         }
     }
-    val colorScheme = resolveColorScheme(palette, isDark, LocalContext.current)
+    val context = LocalContext.current
+    val colorScheme = remember(palette, isDark, context) {
+        resolveColorScheme(palette, isDark, context)
+    }
     CompositionLocalProvider(
         LocalMyJetFrameColors provides MyJetFrameColors(isDark, colorScheme),
     ) {
@@ -1112,10 +1132,13 @@ fun Background(
 ```kotlin
 package com.jhon.myjetframe.core.designsystem
 
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.activity.ComponentActivity
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.core.view.WindowCompat
 import com.jhon.myjetframe.core.designsystem.theme.MyJetFrameTheme
 import com.jhon.myjetframe.core.designsystem.theme.Palette
 import com.jhon.myjetframe.core.designsystem.theme.ThemeMode
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -1123,20 +1146,26 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class WindowTest {
-    @get:Rule val compose = createComposeRule()
+    @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
 
     @Test
-    fun windowEffects_appliesWithoutCrashing() {
+    fun windowEffects_lightTheme_setsLightSystemBars() {
         compose.setContent {
             MyJetFrameTheme(themeMode = ThemeMode.Light, palette = Palette.Line) {
                 MyJetFrameWindowEffects()
             }
         }
         compose.waitForIdle()
-        // Guarded with `as? Activity`; no crash on any host.
+        val controller = WindowCompat.getInsetsController(
+            compose.activity.window,
+            compose.activity.window.decorView,
+        )
+        assertTrue(controller.isAppearanceLightStatusBars)
+        assertTrue(controller.isAppearanceLightNavigationBars)
     }
 }
 ```
+Note: `createAndroidComposeRule<ComponentActivity>()` needs `androidx.activity:activity-compose` (present). It provides `compose.activity` for a real read-back assertion. If `WindowInsetsControllerCompat.isAppearanceLightStatusBars` does not reflect the value under this Robolectric SDK, report it as a concern rather than weakening the test to "no crash" silently.
 
 - [ ] **Step 6: Implement `Window.kt`**
 
@@ -1144,6 +1173,8 @@ class WindowTest {
 package com.jhon.myjetframe.core.designsystem
 
 import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import android.graphics.drawable.ColorDrawable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -1152,13 +1183,19 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import com.jhon.myjetframe.core.designsystem.theme.LocalMyJetFrameColors
 
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
+}
+
 @Composable
 fun MyJetFrameWindowEffects() {
     val view = LocalView.current
     if (view.isInEditMode) return
     val colors = LocalMyJetFrameColors.current
     SideEffect {
-        val activity = view.context as? Activity ?: return@SideEffect
+        val activity = view.context.findActivity() ?: return@SideEffect
         activity.window.setBackgroundDrawable(
             ColorDrawable(colors.colorScheme.surface.toArgb()),
         )

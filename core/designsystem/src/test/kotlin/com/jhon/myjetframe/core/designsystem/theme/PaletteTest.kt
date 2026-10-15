@@ -1,5 +1,7 @@
 package com.jhon.myjetframe.core.designsystem.theme
 
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.graphics.ColorUtils
@@ -9,6 +11,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 class PaletteTest {
@@ -33,15 +36,26 @@ class PaletteTest {
     }
 
     @Test
-    fun brand_extremeSeed_keepsContrast() {
+    fun brand_extremeSeed_keepsReadableContrast() {
         val scheme = brandColorScheme(Color.White, dark = false)
-        assertTrue(luminance(scheme.primary) < luminance(scheme.onPrimary) ||
-            luminance(scheme.primary) > luminance(scheme.onPrimary))
+        val ratio = ColorUtils.calculateContrast(
+            scheme.onPrimary.toArgb(),
+            scheme.primary.toArgb(),
+        )
+        assertTrue("contrast ratio=$ratio", ratio >= 3.0)
     }
 
-    private fun luminance(c: Color): Float {
-        val hsl = FloatArray(3)
-        ColorUtils.colorToHSL(c.toArgb(), hsl)
-        return hsl[2]
+    @Test
+    @Config(sdk = [30])
+    fun dynamic_belowApi31_usesBaselineScheme() {
+        val ctx = RuntimeEnvironment.getApplication()
+        assertEquals(
+            lightColorScheme().toString(),
+            resolveColorScheme(Palette.Dynamic, dark = false, context = ctx).toString(),
+        )
+        assertEquals(
+            darkColorScheme().toString(),
+            resolveColorScheme(Palette.Dynamic, dark = true, context = ctx).toString(),
+        )
     }
 }

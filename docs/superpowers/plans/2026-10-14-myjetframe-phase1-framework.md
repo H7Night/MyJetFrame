@@ -655,6 +655,8 @@ val LineDarkColorScheme: ColorScheme = darkColorScheme(
 ```kotlin
 package com.jhon.myjetframe.core.designsystem.theme
 
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.graphics.ColorUtils
@@ -664,6 +666,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 class PaletteTest {
@@ -688,16 +691,27 @@ class PaletteTest {
     }
 
     @Test
-    fun brand_extremeSeed_keepsContrast() {
+    fun brand_extremeSeed_keepsReadableContrast() {
         val scheme = brandColorScheme(Color.White, dark = false)
-        assertTrue(luminance(scheme.primary) < luminance(scheme.onPrimary) ||
-            luminance(scheme.primary) > luminance(scheme.onPrimary))
+        val ratio = ColorUtils.calculateContrast(
+            scheme.onPrimary.toArgb(),
+            scheme.primary.toArgb(),
+        )
+        assertTrue("contrast ratio=$ratio", ratio >= 3.0)
     }
 
-    private fun luminance(c: Color): Float {
-        val hsl = FloatArray(3)
-        ColorUtils.colorToHSL(c.toArgb(), hsl)
-        return hsl[2]
+    @Test
+    @Config(sdk = [30])
+    fun dynamic_belowApi31_usesBaselineScheme() {
+        val ctx = RuntimeEnvironment.getApplication()
+        assertEquals(
+            lightColorScheme(),
+            resolveColorScheme(Palette.Dynamic, dark = false, context = ctx),
+        )
+        assertEquals(
+            darkColorScheme(),
+            resolveColorScheme(Palette.Dynamic, dark = true, context = ctx),
+        )
     }
 }
 ```
@@ -1606,8 +1620,8 @@ git -C "MyJetFrame" commit -m "docs: document MyJetFrame modules, palette API, a
 
 **4. Review Focus coverage:**
 - (1) No-Activity host → Task 6: `MyJetFrameTheme` is side-effect-free; `MyJetFrameWindowEffects()` guarded with `as? Activity` and tested under Robolectric.
-- (2) Extreme Brand seed → Task 3 `brand_extremeSeed_keepsContrast`.
-- (3) Dynamic < API 31 fallback → covered by `resolveColorScheme` branch; add a Robolectric `@Config(sdk=[30])` case if the executor wants explicit coverage (Task 3).
+- (2) Extreme Brand seed → Task 3 `brand_extremeSeed_keepsReadableContrast` (WCAG contrast ratio ≥ 3.0 via `ColorUtils.calculateContrast`).
+- (3) Dynamic < API 31 fallback → Task 3 `dynamic_belowApi31_usesBaselineScheme` (`@Config(sdk = [30])`).
 - (4) Standalone component render → Tasks 8–11 render widgets inside only `MyJetFrameTheme` (no Scaffold).
 - (5) Missing fonts → Task 4 references fonts via `R.font.*`; `assembleDebug` in Task 12 fails if absent.
 

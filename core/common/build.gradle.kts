@@ -22,9 +22,9 @@ kotlin {
 }
 
 dependencies {
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.foundation)
-    implementation(libs.androidx.ui)
+    api(platform(libs.androidx.compose.bom))
+    api(libs.androidx.foundation)
+    api(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
 

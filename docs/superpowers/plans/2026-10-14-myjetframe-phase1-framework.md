@@ -396,8 +396,9 @@ rule (generic AND multi-app) applies. These are ported as-is from Kenko.
 - Consumes: nothing.
 - Produces:
   - `class DpRange` (value class over `ClosedFloatingPointRange<Float>`), `operator Dp.rangeTo(Dp): DpRange`, `operator DpRange.contains(Dp): Boolean`.
-  - `val PHI: Float` (= `1.618f`), `fun Modifier.vertical(): Modifier`.
+  - `val PHI: Float` (= Kenko's exact value `16F / 10F`, i.e. `1.6f` — do NOT use `1.618f`), `fun Modifier.vertical(towardsRight: Boolean = true): Modifier`.
   - `operator fun PaddingValues.plus(other: PaddingValues): PaddingValues`, `operator fun PaddingValues.minus(other: PaddingValues): PaddingValues`.
+  - Module deps (`:core:common`): add `androidx.compose.foundation:foundation` (version from the BOM) so `PaddingValues` resolves, and expose `androidx.ui` + `foundation` with `api(...)` (the module's public API uses `Modifier`/`PaddingValues`), plus `api(platform(libs.androidx.compose.bom))`. Do not use `implementation(...)` for `ui`/`foundation`.
 
 - [ ] **Step 1: Port `DpRange` from Kenko**
 
@@ -459,7 +460,7 @@ Expected: PASS.
 
 - [ ] **Step 6: Port `Modifier` extensions**
 
-Copy `C:\Users\user\Abandon\Projects\Kenko\app\src\main\kotlin\com\looker\kenko\ui\extension\Modifier.kt` to `core/common/src/main/kotlin/com/jhon/myjetframe/core/common/Modifier.kt`. Change the package to `com.jhon.myjetframe.core.common`. Keep `Modifier.vertical()` and `PHI`. If `PHI` is not of a compose type (plain `Float`/`Dp`), keep it; if `Modifier.vertical()` references Kenko-only symbols, replace with compose equivalents.
+Copy `C:\Users\user\Abandon\Projects\Kenko\app\src\main\kotlin\com\looker\kenko\ui\extension\Modifier.kt` to `core/common/src/main/kotlin/com/jhon/myjetframe/core/common/Modifier.kt`. Change the package to `com.jhon.myjetframe.core.common`. Keep `Modifier.vertical()` and `PHI` exactly as in Kenko — `PHI` is `const val PHI = 16F / 10F` (= `1.6f`); reproduce that literal, do not substitute `1.618f`. If `Modifier.vertical()` references Kenko-only symbols, replace with compose equivalents.
 
 - [ ] **Step 7: Write the failing test for `PaddingValues` operators**
 
